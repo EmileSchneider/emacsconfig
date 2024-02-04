@@ -58,7 +58,6 @@
   :ensure t
   :hook (after-init . doom-modeline-mode))
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; GENERAL CODING
 ;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -87,6 +86,13 @@
   :config
   (which-key-mode)
   (setq which-key-idle-delay 0.5))
+
+(use-package smartparens-mode
+  :ensure smartparens
+  :hook (prog-mode text-mode markdown-mode) ;; add `smartparens-mode` to these hooks
+  :config
+  ;; load default config
+  (require 'smartparens-config))
 
 (use-package helm
   :ensure t
@@ -254,7 +260,7 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(magit fsharp-mode fsharp csharp-mode rustic lsp-ui helm which-key paredit org-bullets org-plus-contrib doom-modeline doom-themes all-the-icons use-package)))
+   '(smartparens magit fsharp-mode fsharp csharp-mode rustic lsp-ui helm which-key paredit org-bullets org-plus-contrib doom-modeline doom-themes all-the-icons use-package)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
