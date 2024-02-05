@@ -1,4 +1,5 @@
 (menu-bar-mode -1)
+
 (tool-bar-mode -1)
 (scroll-bar-mode -1)
 
@@ -27,6 +28,11 @@
 
 ;; (add-to-list 'default-frame-alist '(font . "JetBrains Mono-14"))
 ;; (add-to-list 'default-frame-alist '(line-spacing . 0.2))
+
+
+;; customize path for hasekll
+(setenv "PATH" (concat "/home/user/.ghcup/bin:" (getenv "PATH")))
+(setq exec-path (append exec-path '("/home/user/.ghcup/bin")))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; DOOM Theme
@@ -131,7 +137,7 @@
    helm-buffers-fuzzy-matching t          ; fuzzy matching buffer names when non--nil
                                           ; useful in helm-mini that lists buffers
    ;; ido
-   ido-use-virtual-buffers t      ; Needed in helm-buffers-list
+   ido-use-virtual-buffers t     ; Needed in helm-buffers-list
    )
   (setq helm-buffers-favorite-modes (append helm-buffers-favorite-modes
                                             '(picture-mode artist-mode)))
@@ -146,7 +152,6 @@
 (use-package magit
   :ensure t)
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; LSP
 ;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -160,6 +165,12 @@
   (lsp-idle-delay 0.6)
   :config
   (setq lsp-clients-clangd-args '("--background-index" "--clang-tidy"))
+
+  ;; performance tweaks
+  (setq gc-cons-threshold 100000000)
+  (setq read-process-output-max (* 1024 1024)) ;; 1mb
+  (setq lsp-idle-delay 0.500)
+  
   :hook
   (lsp-ui-mode . lsp-mode)
   (clojure-mode . lsp-mode)
@@ -173,6 +184,77 @@
   (lsp-ui-peek-always-show t)
   (lsp-ui-sideline-show-hover t)
   (lsp-ui-doc-enable nil))
+
+(use-package lsp-treemacs
+  :ensure t)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;
+;; dap mode
+;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package dap-mode
+  :ensure t
+  :after lsp-mode
+  :config
+  (require 'dap-firefox)
+  (setq dap-firefox-debug-program
+        '("node"
+          "/home/torstein/.emacs.d/.extension/vscode/firefox-devtools.vscode-firefox-debug/extension/dist/adapter.bundle.js"))
+
+  (dap-register-debug-template
+   "localhost:5005"
+   (list :type "java"
+         :request "attach"
+         :hostName "localhost"
+         :port 5005))
+  (dap-auto-configure-mode)
+)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Java
+;;;;;;;;;;;;;;;;;;;;;;;;;
+(use-package lsp-java
+  :ensure t
+  :config
+  (setq lsp-java-vmargs
+        (list
+         "-noverify"
+         "-Xmx3G"
+         "-XX:+UseG1GC"
+         "-XX:+UseStringDeduplication"
+         "-Djava.awt.headless=true"
+         "-cp"
+         "/home/torstein/.m2/repository/org/slf4j/slf4j-simple/1.7.36/slf4j-simple-1.7.36.jar:/home/torstein/.m2/repository/org/slf4j/slf4j-api/1.7.36/slf4j-api-1.7.36.jar"
+         "-javaagent:/home/torstein/.m2/repository/org/projectlombok/lombok/1.18.24/lombok-1.18.24.jar"
+         )
+
+        lsp-java-java-path "/usr/lib/jvm/java-17-openjdk/bin/java"
+
+        ;; Don't organise imports on save
+        lsp-java-save-action-organize-imports nil
+
+        ;; Don't format my source code (I use Maven for enforcing my
+        ;; coding style)
+        lsp-java-format-enabled nil)
+  (add-hook 'java-mode-hook 'lsp))
+
+(defun my-java-mode-hook ()
+  (auto-fill-mode)
+  (flycheck-mode)
+  (git-gutter+-mode)
+  (subword-mode)
+  (yas-minor-mode)
+  (when window-system
+    (set-fringe-style '(8 . 0)))
+
+  ;; Fix indentation for anonymous classes
+  (c-set-offset 'substatement-open 0)
+  (if (assoc 'inexpr-class c-offsets-alist)
+      (c-set-offset 'inexpr-class 0))
+
+  ;; Indent arguments on the next line as indented body.
+  (c-set-offset 'arglist-intro '++))
+(add-hook 'java-mode-hook 'my-java-mode-hook)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Rust
@@ -220,6 +302,19 @@
 (use-package fsharp-mode
   :ensure t)
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Haskell
+;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package haskell-mode
+  :ensure t)
+
+(use-package lsp-haskell
+  :ensure t
+  :config
+  (setq lsp-haskell-server-path "~/.ghcup/bin/haskell-language-server-wrapper"))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; org-mode
 ;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -260,7 +355,7 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(smartparens magit fsharp-mode fsharp csharp-mode rustic lsp-ui helm which-key paredit org-bullets org-plus-contrib doom-modeline doom-themes all-the-icons use-package)))
+   '(lsp-haskell haskell-mode smartparens magit fsharp-mode fsharp csharp-mode rustic lsp-ui helm which-key paredit org-bullets org-plus-contrib doom-modeline doom-themes all-the-icons use-package)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
