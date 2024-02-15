@@ -175,7 +175,8 @@
   (lsp-ui-mode . lsp-mode)
   (clojure-mode . lsp-mode)
   (csharp-mode . lsp-mode)
-  (c++-mode . lsp-mode))
+  (c++-mode . lsp-mode)
+  (scala-mode . lsp-mode))
 
 (use-package lsp-ui
   :ensure
@@ -191,10 +192,14 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; dap mode
 ;;;;;;;;;;;;;;;;;;;;;;;;;
+(use-package posframe)
 
 (use-package dap-mode
   :ensure t
   :after lsp-mode
+  :hook
+  (lsp-mode . dap-mode)
+  (lsp-mode . dap-ui-mode)
   :config
   (require 'dap-firefox)
   (setq dap-firefox-debug-program
@@ -223,12 +228,9 @@
          "-XX:+UseG1GC"
          "-XX:+UseStringDeduplication"
          "-Djava.awt.headless=true"
-         "-cp"
-         "/home/torstein/.m2/repository/org/slf4j/slf4j-simple/1.7.36/slf4j-simple-1.7.36.jar:/home/torstein/.m2/repository/org/slf4j/slf4j-api/1.7.36/slf4j-api-1.7.36.jar"
-         "-javaagent:/home/torstein/.m2/repository/org/projectlombok/lombok/1.18.24/lombok-1.18.24.jar"
-         )
+            )
 
-        lsp-java-java-path "/usr/lib/jvm/java-17-openjdk/bin/java"
+        lsp-java-java-path "/usr/lib/jvm/java-17-openjdk-amd64/bin/java"
 
         ;; Don't organise imports on save
         lsp-java-save-action-organize-imports nil
@@ -257,6 +259,28 @@
 (add-hook 'java-mode-hook 'my-java-mode-hook)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Scala
+;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package scala-mode
+  :interpreter ("scala" . scala-mode))
+
+(use-package sbt-mode
+  :commands sbt-start sbt-command
+  :config
+  ;; WORKAROUND: https://github.com/ensime/emacs-sbt-mode/issues/31
+  ;; allows using SPACE when in the minibuffer
+  (substitute-key-definition
+   'minibuffer-complete-word
+   'self-insert-command
+   minibuffer-local-completion-map)
+   ;; sbt-supershell kills sbt-mode:  https://github.com/hvesalai/emacs-sbt-mode/issues/152
+   (setq sbt:program-options '("-Dsbt.supershell=false")))
+
+(use-package lsp-metals
+  :ensure t)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Rust
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -273,6 +297,10 @@
               ("C-c C-c s" . lsp-rust-analyzer-status))
   :config
   (setq rustic-format-on-save t))
+
+;; yew html! macro
+
+(load "~/.emacs.d/yew-mode.el")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Clojure
@@ -355,7 +383,7 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(lsp-haskell haskell-mode smartparens magit fsharp-mode fsharp csharp-mode rustic lsp-ui helm which-key paredit org-bullets org-plus-contrib doom-modeline doom-themes all-the-icons use-package)))
+   '(lsp-metals lsp-haskell haskell-mode smartparens magit fsharp-mode fsharp csharp-mode rustic lsp-ui helm which-key paredit org-bullets org-plus-contrib doom-modeline doom-themes all-the-icons use-package)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
