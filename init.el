@@ -1,5 +1,4 @@
 (menu-bar-mode -1)
-
 (tool-bar-mode -1)
 (scroll-bar-mode -1)
 
@@ -26,9 +25,7 @@
 (customize-set-variable 'tab-width 4)
 (customize-set-variable 'tab-stop-list '(4 8 12))
 
-;; (add-to-list 'default-frame-alist '(font . "JetBrains Mono-14"))
-;; (add-to-list 'default-frame-alist '(line-spacing . 0.2))
-
+(set-frame-font "InconsolataGo Nerd Font 14" nil t)
 
 ;; customize path for hasekll
 (setenv "PATH" (concat "/home/user/.ghcup/bin:" (getenv "PATH")))
@@ -72,7 +69,7 @@
 (use-package company
   :ensure t
   :custom
-  (company-idle-delay 0.8)
+  (company-idle-delay 0.5)
   :config
   (global-company-mode 1))
 
@@ -176,6 +173,7 @@
   (clojure-mode . lsp-mode)
   (csharp-mode . lsp-mode)
   (c++-mode . lsp-mode)
+  (c++-mode . (lambda () (local-set-key (kbd "C-M-i") #'company-complete)))
   (scala-mode . lsp-mode))
 
 (use-package lsp-ui
@@ -192,32 +190,44 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; dap mode
 ;;;;;;;;;;;;;;;;;;;;;;;;;
-(use-package posframe)
+
+(defun my-select-executable ()
+  "Prompt the user to select an executable file."
+  (read-file-name "Select executable: " (lsp-workspace-root)))
 
 (use-package dap-mode
   :ensure t
   :after lsp-mode
-  :hook
-  (lsp-mode . dap-mode)
-  (lsp-mode . dap-ui-mode)
   :config
-  (require 'dap-firefox)
-  (setq dap-firefox-debug-program
-        '("node"
-          "/home/torstein/.emacs.d/.extension/vscode/firefox-devtools.vscode-firefox-debug/extension/dist/adapter.bundle.js"))
+  (require 'dap-lldb)
+  (require 'dap-cpptools)
+  ;; Add more dap-mode related configurations here
+  (setq dap-lldb-debug-program '("/usr/bin/lldb-vscode"))
+  (dap-register-debug-template "LLDB::Run"
+                               (list :type "lldb-vscode"
+                                     :request "launch"
+                                     :name "CMake::LLDB Run"
+                                     :executable (lambda () (read-file-name "Select executable: " (lsp-workspace-root)))
+                                     :args ""
+                                     :cwd (lsp-workspace-root)
+                                     :environment-variables '()
+                                     :lldb-vscode-executable "/usr/bin/lldb-vscode"))
+  (dap-ui-mode 1)
+  (dap-tooltip-mode 1)
+  (tooltip-mode 1)
+  (dap-ui-controls-mode 1))
 
-  (dap-register-debug-template
-   "localhost:5005"
-   (list :type "java"
-         :request "attach"
-         :hostName "localhost"
-         :port 5005))
-  (dap-auto-configure-mode)
-)
+;;;;;;;;;;;;;;;;;;;;;;;;;
+;; GLSL
+;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package glsl-mode
+  :ensure t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Java
 ;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (use-package lsp-java
   :ensure t
   :config
@@ -298,10 +308,6 @@
   :config
   (setq rustic-format-on-save t))
 
-;; yew html! macro
-
-(load "~/.emacs.d/yew-mode.el")
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Clojure
 ;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -376,6 +382,10 @@
   :ensure t
   :hook (org-mode . org-bullets-mode))
 
+(use-package org-roam
+  :ensure t)
+(org-roam-db-autosync-mode)
+
 
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
@@ -383,10 +393,18 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(lsp-metals lsp-haskell haskell-mode smartparens magit fsharp-mode fsharp csharp-mode rustic lsp-ui helm which-key paredit org-bullets org-plus-contrib doom-modeline doom-themes all-the-icons use-package)))
+   '(dap-lldb dap-ui company-lsp org-roam glsl-mode lsp-metals lsp-haskell haskell-mode smartparens magit fsharp-mode fsharp csharp-mode rustic lsp-ui helm which-key paredit org-bullets org-plus-contrib doom-modeline doom-themes all-the-icons use-package)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- )
+ '(org-document-title ((t (:inherit default :weight bold :foreground "#bbc2cf" :family "Sans Serif" :height 1.5 :underline nil))))
+ '(org-level-1 ((t (:inherit default :weight bold :foreground "#bbc2cf" :family "Sans Serif" :height 1.75))))
+ '(org-level-2 ((t (:inherit default :weight bold :foreground "#bbc2cf" :family "Sans Serif" :height 1.5))))
+ '(org-level-3 ((t (:inherit default :weight bold :foreground "#bbc2cf" :family "Sans Serif" :height 1.25))))
+ '(org-level-4 ((t (:inherit default :weight bold :foreground "#bbc2cf" :family "Sans Serif" :height 1.1))))
+ '(org-level-5 ((t (:inherit default :weight bold :foreground "#bbc2cf" :family "Sans Serif"))))
+ '(org-level-6 ((t (:inherit default :weight bold :foreground "#bbc2cf" :family "Sans Serif"))))
+ '(org-level-7 ((t (:inherit default :weight bold :foreground "#bbc2cf" :family "Sans Serif"))))
+ '(org-level-8 ((t (:inherit default :weight bold :foreground "#bbc2cf" :family "Sans Serif")))))
